@@ -1,2 +1,3 @@
-# appdeamon
+# appdaemon
+
 AppDaemon Apps for home-assistant
