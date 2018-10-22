@@ -1,0 +1,23 @@
+version: '3'
+services:
+  hass:
+    image: homeassistant/home-assistant:0.74.2
+    ports:
+      - "8123:8123"
+    volumes:
+      - ./compose/ha-config:/config
+    environment:
+      - TZ=Europe/Berlin
+    container_name: "hass"
+
+  appdaemon:
+    build:
+      context: "."
+    links:
+      - hass
+    volumes:
+      - ./compose/apps:/apps
+    environment:
+      - TZ=Europe/Berlin
+      - HA_URL=http://hass:8123
+    container_name: "appdaemon"

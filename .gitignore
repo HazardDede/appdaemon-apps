@@ -106,5 +106,9 @@ venv.bak/
 # appdaemon
 compiled
 
+# HASS
+.HA_VERSION
+compose/ha-config/*.db
+
 # Custom stuff
 run.sh

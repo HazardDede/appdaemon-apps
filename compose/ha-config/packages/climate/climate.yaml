@@ -1,0 +1,20 @@
+input_select:
+  heating_mode:
+    name: "Heating mode"
+    options:
+      - Comfort
+      - Energy saving
+      - Frost protection
+    icon:
+      mdi:radiator
+
+input_number:
+  bath_heater:
+    min: 8
+    max: 28
+  hallway_heater:
+    min: 8
+    max: 28
+  gallery_heater:
+    min: 8
+    max: 28
