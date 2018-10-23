@@ -1,1 +1,2 @@
+attrs>=18.2.0
 appdaemon==3.0.1

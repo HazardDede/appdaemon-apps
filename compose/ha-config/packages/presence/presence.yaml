@@ -1,0 +1,27 @@
+input_select:
+  paula:
+    name: "Device Tracker - Paula"
+    options:
+      - home
+      - not_home
+  paula_state:
+    name: "Paula"
+    options:
+      - Home
+      - Just Arrived
+      - Just Left
+      - Away
+      - Extended Away
+  paul:
+    name: "Device Tracker - Paul"
+    options:
+      - home
+      - not_home
+  paul_state:
+    name: "Paul"
+    options:
+      - Home
+      - Just Arrived
+      - Just Left
+      - Away
+      - Extended Away

@@ -1,47 +1,73 @@
 # This one is just for testing purposes and will be overwritten
 # when starting a docker container and mounting /apps.
-climate:
-  module: climate
-  class: Climate
-  mode: 
-    entity: input_select.heating_mode
-    map:
-      Comfort: comfort
-      Energy saving: energy
-      Frost protection: frost
-  rooms:
-    bath_downstairs:
-      thermostats:
-        - input_number.bath_heater
-      comfort:
-        setpoint: 20
-        schedule:
-          - start: "04:30"
-            end: "09:00"
-            weekdays: "2-5"
-            setpoint: 22
-          - start: "07:00"
-            end: "12:00"
-            weekdays: "6,7,1"
-            setpoint: 22
-      energy:
-        setpoint: 17
-      frost:
-        setpoint: 8
-    living:
-      thermostats:
-        - input_number.hallway_heater
-        - input_number.gallery_heater
-      comfort:
-        setpoint: 21
-        schedule:
-          - start: "00:00"
-            end: "06:00"
-            setpoint: 19
-      energy:
-        setpoint: 18
-      frost:
-        setpoint: 8
+paula_state:
+  module: presence
+  class: App
+  tracker: input_select.paula
+  state: input_select.paula_state
+  map:
+    home: "Home"
+    away: "Away"
+    extended_away: "Extended Away"
+    just_arrived: "Just arrived"
+    just_left: "Just left"
+paul_state:
+  module: presence
+  class: App
+  tracker: input_select.paul
+  state: input_select.paul_state
+  just_arrived_delay: 5
+  just_left_delay: 5
+  extended_away_delay: 5
+
+# climate:
+#   module: climate
+#   class: Climate
+#   check_interval: 10
+#   mode: 
+#     entity: input_select.heating_mode
+#     map:
+#       Comfort: comfort
+#       Energy saving: energy
+#       Frost protection: frost
+#   rooms:
+#     bath_downstairs:
+#       thermostats:
+#         - entity: input_number.bath_heater
+#           offset: 2
+#       comfort:
+#         setpoint: 16
+#         schedule:
+#           - start: "11:01"
+#             end: "12:00"
+#             weekdays: "2-5"
+#             setpoint: 22.4
+#           - start: "07:00"
+#             end: "12:00"
+#             weekdays: "6,7,1"
+#             setpoint: 22
+#       energy:
+#         setpoint: 17
+#         schedule:
+#           - start: "08:22"
+#             end: "13:00"
+#             setpoint: 23
+#       frost:
+#         setpoint: 8
+#     living:
+#       thermostats:
+#         - input_number.hallway_heater
+#         - input_number.gallery_heater
+#       comfort:
+#         setpoint: 21
+#         schedule:
+#           - start: "00:00"
+#             end: "06:00"
+#             setpoint: 19
+#       energy:
+#         setpoint: 18
+#       frost:
+#         setpoint: 8
 
 
         

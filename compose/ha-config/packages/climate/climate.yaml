@@ -5,6 +5,7 @@ input_select:
       - Comfort
       - Energy saving
       - Frost protection
+      - "Off"
     icon:
       mdi:radiator
 

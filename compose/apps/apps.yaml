@@ -1,3 +1,20 @@
+
+paula_state:
+  module: presence
+  class: App
+  tracker: input_select.paula
+  state: input_select.paula_state
+  map:
+    home: "Home"
+    away: "Away"
+    extended_away: "Extended Away"
+    just_arrived: "Just arrived"
+    just_left: "Just left"
+paul_state:
+  module: presence
+  class: App
+  tracker: input_select.paul
+  state: input_select.paul_state
 climate:
   module: climate
   class: Climate
