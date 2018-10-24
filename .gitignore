@@ -112,3 +112,6 @@ compose/ha-config/*.db
 
 # Custom stuff
 run.sh
+
+# VsCode
+.vscode/
