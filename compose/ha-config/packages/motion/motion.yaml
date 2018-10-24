@@ -1,0 +1,62 @@
+  # lights: 
+  #   - switch.light1
+  #   - switch.light2
+  # sensor: 
+  #   - entity: sensor.lux1
+  #     op: below
+  #     lux: 5.5
+  #   - entity: sensor.lux2
+  #     op: below
+  #     lux: 2
+
+input_number:
+  lux_1:
+    name: "Lux"
+    initial: 15
+    min: 0
+    max: 100
+    step: 1
+
+sensor:
+  - platform: template
+    sensors:
+      lux_1:
+        friendly_name: "Lux"
+        unit_of_measurement: 'Lux'
+        value_template: "{{ states.input_number.lux_1.state }}"
+
+input_boolean:
+  motion:
+    name: "Motion detected"
+    initial: off
+
+binary_sensor:
+  - platform: template
+    sensors:
+      motion:
+        friendly_name: "Motion detected"
+        value_template: "{{ states.input_boolean.motion.state == 'on' }}"
+
+light:
+  - platform: template
+    lights:
+      light1:
+        friendly_name: "Light 1"
+        turn_on:
+          service: logbook.log
+          data:
+            message: "Light 1 on"
+        turn_off:
+          service: logbook.log
+          data:
+            message: "Light 1 off"
+      light2:
+        friendly_name: "Light 2"
+        turn_on:
+          service: logbook.log
+          data:
+            message: "Light 2 on"
+        turn_off:
+          service: logbook.log
+          data:
+            message: "Light 2 off"

@@ -4,8 +4,6 @@ input_select:
     options:
       - Comfort
       - Energy saving
-      - Frost protection
-      - "Off"
     icon:
       mdi:radiator
 
@@ -19,3 +17,35 @@ input_number:
   gallery_heater:
     min: 8
     max: 28
+  cur_temp:
+    name: Current Temperature
+    min: -5
+    max: 30
+
+sensor:
+  - platform: template
+    sensors:
+      cur_temp:
+        friendly_name: "Temperature"
+        unit_of_measurement: '°C'
+        value_template: "{{ states.input_number.cur_temp.state }}"
+
+light:
+  - platform: template
+    lights:
+      heater:
+        friendly_name: "Heater"
+        turn_on:
+          service: logbook.log
+          data:
+            message: "Heater on"
+        turn_off:
+          service: logbook.log
+          data:
+            message: "Heater off"
+
+climate:
+  - platform: generic_thermostat
+    name: generic
+    heater: light.heater
+    target_sensor: sensor.cur_temp
