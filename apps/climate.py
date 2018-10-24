@@ -2,6 +2,7 @@ import attr
 import appdaemon.plugins.hass.hassapi as hass
 import datetime
 import logging
+import time
 
 from enum import Enum
 
@@ -49,6 +50,8 @@ class Thermostat:
             offset = tht['offset']
         if entity.startswith("input_number"):
             return InputNumberThermostat(name=entity, offset=offset)
+        if entity.startswith("climate"):
+            return ClimateThermostat(name=entity, offset=offset)
         raise NotImplemented("Sorry but the thermostat '{}' you provided is not supported".format(**locals()))
 
     @classmethod
@@ -69,6 +72,22 @@ class InputNumberThermostat(Thermostat):
                 "input_number/set_value", 
                 entity_id=self.name, 
                 value=range_sp
+            )
+
+
+@attr.s
+class ClimateThermostat(Thermostat):
+    def set_setpoint(self, hass, setpoint):
+        curval = hass.get_state(entity=self.name, attribute="temperature")
+        offsetted_sp = setpoint + self.offset
+        range_sp = min(max(MIN_TEMP, int(offsetted_sp + 0.5)), MAX_TEMP)  # Min, Max + Rounding
+        import math
+        if not math.isclose(float(curval), float(range_sp)):
+            hass.log("Calling climate/set_temperature for '{self.name}' with setpoint '{range_sp}' (offset='{self.offset}')".format(**locals()))
+            hass.call_service(
+                "climate/set_temperature", 
+                entity_id=self.name, 
+                temperature=range_sp
             )
 
 
@@ -164,6 +183,7 @@ class Room:
 class Config:
     mode_entity = attr.ib(type=str)
     mode_map = attr.ib(type=dict)
+    mode_init_options = attr.ib(type=bool)
     check_interval = attr.ib(type=int)
     rooms = attr.ib(type=list)
 
@@ -173,7 +193,8 @@ class Config:
         rooms_node = dct["rooms"]
         return cls(
             mode_entity=mode_node["entity"], 
-            mode_map=mode_node.get("map"), 
+            mode_map=mode_node.get("map"),
+            mode_init_options=mode_node.get("init_options", False),
             check_interval=dct["check_interval"],
             rooms=Room.from_dict(rooms_node)
         )
@@ -216,7 +237,8 @@ class Validator:
         Optional("check_interval", default=0): int,
         Required("mode"): {
             Required("entity"): str,
-            Optional("map", default={}): {str: str}
+            Optional("map", default={}): {str: str},
+            Optional("init_options", default=False): bool
         },
         Required("rooms"): {
             str: {
@@ -234,12 +256,14 @@ class Validator:
 
 
 class App(hass.Hass):
-    #initialize() function which will be called at startup and reload
     def initialize(self):
         dct = Validator.validate_config(self.args)
         self._config = Config.from_dict(dct)
         self.schedules = []
 
+        if self._config.mode_init_options:
+            self._set_options()
+            time.sleep(0.5)  # We have to wait after setting the mode - otherwise the read is "wrong"
         self._mode = self._resolve_mode(self.get_state(entity=self._config.mode_entity))
         self.log("Current mode is '{self._mode}'".format(**locals()))
         self.listen_state(self._on_mode_change, self._config.mode_entity)
@@ -271,6 +295,7 @@ class App(hass.Hass):
         self._make_schedules()
 
     def _resolve_mode(self, hass_mode):
+        mode_label = hass_mode
         if self._config.mode_map:
             mode_label = self._config.mode_map.get(hass_mode, hass_mode)  # If mapping key does not exist, use the original value
         return Mode.from_str(mode_label)
@@ -297,6 +322,29 @@ class App(hass.Hass):
     def _update_setpoints_for_all_rooms(self):
         for room in self._config.rooms:
             room.update_setpoints(hass=self, mode=self._mode)
+
+    def _set_options(self):
+        # Memorize current state. set_options will revert the selection
+        curstate = self.get_state(entity=self._config.mode_entity)
+        self.log("Current mode is {curstate}".format(**locals()))
+        
+        invert_map = {mode: mode.value for mode in Mode}
+        invert_map.update({Mode.from_str(v): k for k, v in self._config.mode_map.items()})
+        options = [invert_map.get(mode, mode.value) for mode in Mode]
+        self.log("Setting mode options to {options}".format(**locals()))
+        self.call_service(
+            "input_select/set_options",
+            entity_id=self._config.mode_entity,
+            options=options
+        )
+        
+        if curstate not in options:
+            # The previous state of the mode entity is not longer a valid one - fallback
+            self.log("Previous mode is not longer valid - reverting to mode = off")
+            curstate = invert_map[Mode.Off]
+        # Restore the previous state if possible
+        self.log("Restoring mode to {curstate}".format(**locals()))
+        self.call_service("input_select/select_option", entity_id=self._config.mode_entity, option=curstate)
 
 
 Climate = App  # Backwards compat
