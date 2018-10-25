@@ -87,7 +87,7 @@ class App(hass.Hass):
 
     if cfg.get('init_options', False):
       self._set_options()
-      time.sleep(0.5)  # We have to wait after setting the mode - otherwise the read is "wrong"
+      time.sleep(1)  # We have to wait after setting the mode - otherwise the read is "wrong"
     
     self._init_current_state()
 
@@ -133,7 +133,10 @@ class App(hass.Hass):
   def _init_current_state(self):
     hass_state = self.get_state(entity=self._state_entity)
     self.log("Current state in hass is {hass_state}".format(**locals()))
-    curstate = self._imap[hass_state]
+    curstate = self._imap.get(hass_state)
+    if curstate is None:
+      self.log("Current state in hass is invalid. Falling back to {}".format(State.Home))
+      curstate = State.Home
     tracker_state = TrackerState.from_str(self.get_state(entity=self._tracker_entity))
     if tracker_state is TrackerState.Home and curstate not in (State.JustArrived, State.Home):
       self.log("Current state '{curstate}' is invalid with tracker state '{tracker_state}'. Resetting to home".format(**locals()))
