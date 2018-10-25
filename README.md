@@ -20,7 +20,7 @@ docker-compose down
 
 ## Apps
 
-# Climate
+### Climate
 
 Simple scheduler for thermostats. Is controlled by four modes: `Comfort`, `Energy Saving`, `Frost protection` and `Off`. The first three are just names that will trigger different schedules when activated. `Off` means that the scheduler will be turned off.
 
@@ -74,7 +74,7 @@ climate:
         setpoint: 8
 ```
 
-# Motion
+### Motion
 
 Will turn on lights / switches (single or multiple) when motion (binary_sensor) was detected. Will turn off the lights again after a specified amount of time.
 If a sensor is specified any contraints will be checked before turning on the lights.
@@ -94,7 +94,7 @@ motion_lights:
       lux: 10
 ```
 
-# Presence
+### Presence
 
 The supported device_tracker from hass is quite binary: `home` or `not_home`. But I want to know if somebody just the left or just arrived or is staying away for quite some time. To realize this is what this app aims for.
 
