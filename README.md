@@ -30,6 +30,7 @@ A mode has a baseline temperature (the temperature that is active, when no sched
 climate:
   module: climate
   class: App
+  check_interval: 5m  # Checks the setpoints every interval. Adjust setpoints if necessary
   mode: 
     entity: input_select.heating_mode  # The mode selector in hass
     map:  # Map the internal modes to human readable ones
@@ -83,14 +84,14 @@ If a sensor is specified any contraints will be checked before turning on the li
 motion_lights:
   module: motion
   class: App
-  for: 120  # (seconds) Turn off lights after 2 minutes
+  for: 2m  # Turn off lights after 2 minutes
   motion: binary_sensor.motion  # Track this motion device for motion (list is also possible)
   lights: # Turn on / off those lights
     - light.light1
     - light.light2
   sensor: # Check those sensors for constraints
     - entity: sensor.lux_1
-      op: below
+      op: below  # Possible: below, above, equals (so far only numeric)
       lux: 10
 ```
 
@@ -109,9 +110,9 @@ paula_state:
   tracker: device_tracker.paula  # The device tracker
   state: input_select.paula_state  # The input_select that will hold the extended state
   init_options: True  # Init the states of the input_select
-  just_arrived_delay: 5  # (seconds)  When to transit from 'Just Arrived' to 'Home
-  just_left_delay: 5  # (seconds)  When to transit from 'Just Left' to 'Away'
-  extended_away_delay: 5  # (seconds)  When to transit from 'Away' to 'Extended Away'
+  just_arrived_delay: 10m  # When to transit from 'Just Arrived' to 'Home
+  just_left_delay: 10m  # When to transit from 'Just Left' to 'Away'
+  extended_away_delay: 24h  # When to transit from 'Away' to 'Extended Away'
   map:  # Mapping the internal states to human friendly names for hass
     home: "Home"
     away: "Away"
@@ -119,3 +120,8 @@ paula_state:
     just_arrived: "Just arrived"
     just_left: "Just left"
 ```
+
+## Changelog
+
+* 0.2.0: Making linter happy, pass duration in seconds as literals (e.g. 10m, 2d, ...)
+* 0.1.0: First working version
