@@ -1,12 +1,18 @@
 import attr
+from enum import Enum
 
 import appdaemon.plugins.hass.hassapi as hass
 
+import utils
 
-from enum import Enum
+
+__VERSION__ = "0.1.0"
+
 
 class Op(Enum):
     Below = "below"
+    Above = "above"
+    Equals = "equals"
 
     @classmethod
     def from_str(cls, candidate):
@@ -47,19 +53,22 @@ class Motion:
         return [cls(entity=item, hass=hass) for item in cfg['motion']]
 
     def on_motion(self, callback):
-        self.hass.listen_state(callback, self.entity, new = "on")
+        self.hass.listen_state(callback, self.entity, new="on")
+
+    def on_motion_off(self, callback):
+        self.hass.listen_state(callback, self.entity, old='on', new='off')
 
 
 @attr.s
 class Sensor:
     entity = attr.ib(type=str)
     op = attr.ib(type=str)
-    lux = attr.ib(type=(int, float))
+    value = attr.ib(type=(int, float))
     hass = attr.ib()
 
     @classmethod
     def from_config(cls, cfg, hass):
-        return [cls(entity=item['entity'], op=item['op'], lux=item['lux'], hass=hass) for item in cfg['sensor']]
+        return [cls(entity=item['entity'], op=item['op'], value=item['value'], hass=hass) for item in cfg['sensor']]
 
     def current(self):
         val = self.hass.get_state(entity=self.entity)
@@ -71,8 +80,17 @@ class Sensor:
             return False  # Device is unknown or error
 
         if self.op is Op.Below:
-            res = curval < self.lux
-            self.hass.log("Limit check: {curval} < {self.lux} = {res}".format(**locals()))
+            res = curval < self.value
+            self.hass.log("Limit check: {curval} < {self.value} = {res}".format(**locals()))
+            return res
+        if self.op is Op.Above:
+            res = curval > self.value
+            self.hass.log("Limit check: {curval} > {self.value} = {res}".format(**locals()))
+            return res
+        if self.op is Op.Equals:
+            import math
+            res = math.isclose(curval, self.value)
+            self.hass.log("Limit check: {curval} > {self.value} = {res}".format(**locals()))
             return res
         return True
 
@@ -83,11 +101,11 @@ class Validator:
     SENSOR_SCHEMA = Schema({
         Required("entity"): str,
         Required("op"): And(str, Op.from_str),
-        Required("lux"): Or(float, int)
+        Required("value"): Or(float, int)
     })
 
     SCHEMA = Schema({
-        Optional("for", default=5 * 60): int,  # Lights on for x seconds
+        Optional("for", default="5m"): utils.parse_duration_literal,  # Lights on for x seconds
         Required("lights"): Or([str], lambda v: [v] if isinstance(v, str) else []),
         Required("motion"): Or([str], lambda v: [v] if isinstance(v, str) else []),
         Optional("sensor", default=[]): Or([SENSOR_SCHEMA], lambda v: [Validator.SENSOR_SCHEMA(v)])
@@ -100,8 +118,9 @@ class Validator:
 
 class App(hass.Hass):
     def initialize(self):
+        self.log("Motion App @ {version}".format(version=__VERSION__))
         cfg = Validator.validate(self.args)
-        
+
         self._lights = Light.from_config(cfg, self)
         self._motion = Motion.from_config(cfg, self)
         self._sensor = Sensor.from_config(cfg, self)
@@ -110,6 +129,7 @@ class App(hass.Hass):
 
         for motion in self._motion:
             motion.on_motion(self._on_motion)
+            motion.on_motion_off(self._on_motion_off)
 
     def _on_motion(self, entity, attribute, old, new, kwargs):
         self.log("Motion detected @ {entity}: {old} -> {new}".format(**locals()))
@@ -118,10 +138,17 @@ class App(hass.Hass):
                 return
         for light in self._lights:
             light.turn_on()
-        if self._timer:
-            self.cancel_timer(self._timer)
+        self._safe_cancel_timer()
+
+    def _on_motion_off(self, entity, attribute, old, new, kwargs):
+        self.log("Motion off @ {entity}: {old} -> {new}".format(**locals()))
+        self._safe_cancel_timer()
         self._timer = self.run_in(self._on_turn_off_after_delay, self._for)
 
     def _on_turn_off_after_delay(self, kwargs):
-         for light in self._lights:
-            light.turn_off()       
+        for light in self._lights:
+            light.turn_off()
+
+    def _safe_cancel_timer(self):
+        if self._timer:
+            self.cancel_timer(self._timer)

@@ -9,7 +9,7 @@ motion_lights:
   sensor: 
     - entity: sensor.lux_1
       op: below
-      lux: 10
+      value: 10
 
 paula_state:
   module: presence
@@ -40,6 +40,7 @@ paul_state:
 climate:
   module: climate
   class: Climate
+  check_interval: 10s
   mode: 
     entity: input_select.heating_mode
     map:

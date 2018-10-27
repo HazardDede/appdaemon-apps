@@ -3,15 +3,15 @@
 motion_lights:
   module: motion
   class: App
-  for: 5
+  for: 5s
   motion: binary_sensor.motion
   lights: 
     - light.light1
     - light.light2
   sensor: 
     - entity: sensor.lux_1
-      op: below
-      lux: 10
+      op: equals
+      value: 10
 
 paula_state:
   module: presence
@@ -19,9 +19,9 @@ paula_state:
   tracker: input_select.paula
   state: input_select.paula_state
   init_options: True
-  just_arrived_delay: 5
-  just_left_delay: 5
-  extended_away_delay: 5
+  just_arrived_delay: 5s
+  just_left_delay: 5s
+  extended_away_delay: 10s
   map:
     home: "Home"
     away: "Away"
@@ -35,13 +35,14 @@ paul_state:
   tracker: input_select.paul
   state: input_select.paul_state
   init_options: True
-  just_arrived_delay: 5
-  just_left_delay: 5
-  extended_away_delay: 5
+  just_arrived_delay: 5s
+  just_left_delay: 5s
+  extended_away_delay: 10s
 
 climate:
   module: climate
   class: Climate
+  check_interval: 30s
   mode: 
     entity: input_select.heating_mode
     map:

@@ -1,12 +1,14 @@
 import attr
-import appdaemon.plugins.hass.hassapi as hass
 import datetime
-import logging
+from enum import Enum
 import time
 
-from enum import Enum
+import appdaemon.plugins.hass.hassapi as hass
+
+import utils
 
 
+__VERSION__ = "0.1.0"
 MIN_TEMP = 8
 MAX_TEMP = 28
 
@@ -39,7 +41,7 @@ class Thermostat:
     offset = attr.ib(type=(int, float), default=0)
 
     def set_setpoint(self, hass, setpoint):
-        raise NotImplemented()
+        raise NotImplementedError()
 
     @classmethod
     def _factory(cls, tht):
@@ -52,7 +54,7 @@ class Thermostat:
             return InputNumberThermostat(name=entity, offset=offset)
         if entity.startswith("climate"):
             return ClimateThermostat(name=entity, offset=offset)
-        raise NotImplemented("Sorry but the thermostat '{}' you provided is not supported".format(**locals()))
+        raise NotImplementedError("Sorry but the thermostat '{}' you provided is not supported".format(**locals()))
 
     @classmethod
     def from_dict(cls, dct):
@@ -67,10 +69,11 @@ class InputNumberThermostat(Thermostat):
         range_sp = min(max(MIN_TEMP, int(offsetted_sp + 0.5)), MAX_TEMP)  # Min, Max + Rounding
         import math
         if not math.isclose(float(curval), float(range_sp)):
-            hass.log("Calling input_number/set_value for '{self.name}' with setpoint '{range_sp}' (offset='{self.offset}')".format(**locals()))
+            hass.log("Calling input_number/set_value for '{self.name}' with setpoint "
+                     "'{range_sp}' (offset='{self.offset}')".format(**locals()))
             hass.call_service(
-                "input_number/set_value", 
-                entity_id=self.name, 
+                "input_number/set_value",
+                entity_id=self.name,
                 value=range_sp
             )
 
@@ -83,10 +86,11 @@ class ClimateThermostat(Thermostat):
         range_sp = min(max(MIN_TEMP, int(offsetted_sp + 0.5)), MAX_TEMP)  # Min, Max + Rounding
         import math
         if not math.isclose(float(curval), float(range_sp)):
-            hass.log("Calling climate/set_temperature for '{self.name}' with setpoint '{range_sp}' (offset='{self.offset}')".format(**locals()))
+            hass.log("Calling climate/set_temperature for '{self.name}' with setpoint "
+                     "'{range_sp}' (offset='{self.offset}')".format(**locals()))
             hass.call_service(
-                "climate/set_temperature", 
-                entity_id=self.name, 
+                "climate/set_temperature",
+                entity_id=self.name,
                 temperature=range_sp
             )
 
@@ -100,9 +104,12 @@ class Schedule:
 
     @staticmethod
     def _make_weekday_list(literal):
-        if not literal: return list(range(1, 8))
-        if isinstance(literal, int): return [literal]
-        if isinstance(literal, (tuple, list)): return [int(i) for i in literal]
+        if not literal:
+            return list(range(1, 8))
+        if isinstance(literal, int):
+            return [literal]
+        if isinstance(literal, (tuple, list)):
+            return [int(i) for i in literal]
         if isinstance(literal, str):
             if '-' in literal:
                 start, _, end = literal.partition('-')
@@ -110,14 +117,14 @@ class Schedule:
             if ',' in literal:
                 return [int(i) for i in literal.split(',')]
             return [int(literal)]
-        raise NotImplemented()
+        raise NotImplementedError()
 
     @classmethod
     def from_dict(cls, dct):
         return [cls(
-            setpoint=sched["setpoint"], 
+            setpoint=sched["setpoint"],
             start=sched["start"],
-            end=sched["end"], 
+            end=sched["end"],
             weekdays=cls._make_weekday_list(sched.get("weekdays"))
         ) for sched in dct]
 
@@ -141,8 +148,8 @@ class Room:
     @classmethod
     def from_dict(cls, dct):
         return [cls(
-            name=rname, 
-            thermostats=Thermostat.from_dict(rdct["thermostats"]), 
+            name=rname,
+            thermostats=Thermostat.from_dict(rdct["thermostats"]),
             controls={mode: Control.from_dict(rdct[mode.value]) for mode in Mode if mode is not Mode.Off}
         ) for rname, rdct in dct.items()]
 
@@ -152,7 +159,7 @@ class Room:
         check_time = check_time or datetime.datetime.now().time()
         if begin_time < end_time:
             return check_time >= begin_time and check_time <= end_time
-        else: # crosses midnight
+        else:  # crosses midnight
             return check_time >= begin_time or check_time <= end_time
 
     def eval_setpoint(self, mode, dt_override=None):
@@ -177,7 +184,7 @@ class Room:
         hass.log("Evaluated setpoint for '{self.name}' to '{setpoint}'".format(**locals()))
         for tht in self.thermostats:
             tht.set_setpoint(hass, setpoint)
-            
+
 
 @attr.s
 class Config:
@@ -192,7 +199,7 @@ class Config:
         mode_node = dct["mode"]
         rooms_node = dct["rooms"]
         return cls(
-            mode_entity=mode_node["entity"], 
+            mode_entity=mode_node["entity"],
             mode_map=mode_node.get("map"),
             mode_init_options=mode_node.get("init_options", False),
             check_interval=dct["check_interval"],
@@ -212,9 +219,9 @@ class Validator:
         if not hour and not minute:
             raise ValueError("Could not extract whether hour nor minute from schedule")
         return datetime.time(_eval(hour), _eval(minute), 0)
-    
+
     SETPOINT_SCHEMA = Schema(All(Or(float, int), Range(min=MIN_TEMP, max=MAX_TEMP)))
-    
+
     HEATING_SCHEMA = Schema({
         Required("setpoint"): SETPOINT_SCHEMA,
         Optional("schedule", default=[]): [{
@@ -234,7 +241,7 @@ class Validator:
     ))
 
     SCHEMA = Schema({
-        Optional("check_interval", default=0): int,
+        Optional("check_interval", default=0): utils.parse_duration_literal,
         Required("mode"): {
             Required("entity"): str,
             Optional("map", default={}): {str: str},
@@ -257,6 +264,7 @@ class Validator:
 
 class App(hass.Hass):
     def initialize(self):
+        self.log("Climate App @ {version}".format(version=__VERSION__))
         dct = Validator.validate_config(self.args)
         self._config = Config.from_dict(dct)
         self.schedules = []
@@ -267,18 +275,18 @@ class App(hass.Hass):
         self._mode = self._resolve_mode(self.get_state(entity=self._config.mode_entity))
         self.log("Current mode is '{self._mode}'".format(**locals()))
         self.listen_state(self._on_mode_change, self._config.mode_entity)
-        
+
         self._update_setpoints_for_all_rooms()
         self._make_schedules()
         if self._config.check_interval > 0:
             # Run every x `check_interval` seconds and set thermostats to reflect the current configuration
             self.run_every(
-                self._on_interval, 
-                datetime.datetime.now() + datetime.timedelta(seconds=self._config.check_interval), 
+                self._on_interval,
+                datetime.datetime.now() + datetime.timedelta(seconds=self._config.check_interval),
                 self._config.check_interval
             )
         self.log("Climate controller initialized")
-    
+
     def _on_schedule(self, kwargs):
         self.log("Scheduled change of setpoints for room '{room.name}'".format(room=kwargs.get('room')))
         kwargs['room'].update_setpoints(hass=self, mode=self._mode)
@@ -297,16 +305,17 @@ class App(hass.Hass):
     def _resolve_mode(self, hass_mode):
         mode_label = hass_mode
         if self._config.mode_map:
-            mode_label = self._config.mode_map.get(hass_mode, hass_mode)  # If mapping key does not exist, use the original value
+            # If mapping key does not exist, use the original value
+            mode_label = self._config.mode_map.get(hass_mode, hass_mode)
         return Mode.from_str(mode_label)
-    
+
     def _make_schedules(self):
         # Remove old schedules if any
         self.log("Clearing current schedules")
         for handle in self.schedules:
             self.cancel_timer(handle)
         self.schedules.clear()
-        
+
         # New schedules
         mode = self._mode
         if mode is Mode.Off:
@@ -327,7 +336,7 @@ class App(hass.Hass):
         # Memorize current state. set_options will revert the selection
         curstate = self.get_state(entity=self._config.mode_entity)
         self.log("Current mode is {curstate}".format(**locals()))
-        
+
         invert_map = {mode: mode.value for mode in Mode}
         invert_map.update({Mode.from_str(v): k for k, v in self._config.mode_map.items()})
         options = [invert_map.get(mode, mode.value) for mode in Mode]
@@ -337,7 +346,7 @@ class App(hass.Hass):
             entity_id=self._config.mode_entity,
             options=options
         )
-        
+
         if curstate not in options:
             # The previous state of the mode entity is not longer a valid one - fallback
             self.log("Previous mode is not longer valid - reverting to mode = off")
