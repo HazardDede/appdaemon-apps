@@ -24,7 +24,7 @@ docker-arm:
 version:
 	@echo $(VERSION)
 
-next-version: lint test-configs test
+next-version: lint
 	$(eval NEXT_VERSION := $(shell bumpversion --dry-run --allow-dirty --list $(VERSION_PART) | grep new_version | sed s,"^.*=",,))
 	@echo Next version is $(NEXT_VERSION)
 	bumpversion $(VERSION_PART)
