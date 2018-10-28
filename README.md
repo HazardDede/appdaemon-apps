@@ -69,6 +69,11 @@ climate:
           - start: "00:00"
             end: "06:00"
             setpoint: 19
+          - start: "06:00"  # Heat up when input_boolean 'run_schedule' evaluates to true ('on')
+            end: "23:59"
+            setpoint: 24
+            constraints:
+              - input_boolean.run_schedule
       energy:
         setpoint: 18
       frost:
@@ -123,5 +128,6 @@ paula_state:
 
 ## Changelog
 
+* 0.2.1: Adds contraints to climate app schedules
 * 0.2.0: Making linter happy, pass duration in seconds as literals (e.g. 10m, 2d, ...)
 * 0.1.0: First working version

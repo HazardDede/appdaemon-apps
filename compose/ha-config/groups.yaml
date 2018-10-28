@@ -8,6 +8,7 @@ climate:
     - input_number.cur_temp
     - light.heater
     - climate.generic
+    - input_boolean.run_schedule
 
 presence:
   name: Presence App

@@ -1,16 +1,17 @@
 # This one is just for testing purposes and will be overwritten
 # when starting a docker container and mounting /apps.
+
 motion_lights:
   module: motion
   class: App
-  for: 5s
+  for: 5
   motion: binary_sensor.motion
   lights: 
     - light.light1
     - light.light2
   sensor: 
     - entity: sensor.lux_1
-      op: equals
+      op: below
       value: 10
 
 paula_state:
@@ -19,9 +20,9 @@ paula_state:
   tracker: input_select.paula
   state: input_select.paula_state
   init_options: True
-  just_arrived_delay: 5s
-  just_left_delay: 5s
-  extended_away_delay: 10s
+  just_arrived_delay: 5
+  just_left_delay: 5
+  extended_away_delay: 5
   map:
     home: "Home"
     away: "Away"
@@ -35,14 +36,14 @@ paul_state:
   tracker: input_select.paul
   state: input_select.paul_state
   init_options: True
-  just_arrived_delay: 5s
-  just_left_delay: 5s
-  extended_away_delay: 10s
+  just_arrived_delay: 5
+  just_left_delay: 5
+  extended_away_delay: 5
 
 climate:
   module: climate
   class: Climate
-  check_interval: 30s
+  check_interval: 10s
   mode: 
     entity: input_select.heating_mode
     map:
@@ -82,6 +83,11 @@ climate:
           - start: "00:00"
             end: "06:00"
             setpoint: 19
+          - start: "06:00"  # Heat up when input_boolean 'run_schedule' evaluates to true ('on')
+            end: "23:59"
+            setpoint: 24
+            constraints:
+              - input_boolean.run_schedule
       energy:
         setpoint: 18
       frost:

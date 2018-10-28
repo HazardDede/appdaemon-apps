@@ -96,11 +96,28 @@ class ClimateThermostat(Thermostat):
 
 
 @attr.s
+class BinarySensor:
+    entity = attr.ib(type=str)
+
+    @classmethod
+    def from_config(cls, cfg):
+        return [cls(entity=item) for item in cfg]
+
+    def current(self, hass):
+        val = hass.get_state(entity=self.entity)
+        return str(val.lower()) in ['on', 'true', 'home']
+
+    def on_change(self, hass, callback, room):
+        return hass.listen_state(callback, self.entity, room=room)
+
+
+@attr.s
 class Schedule:
     setpoint = attr.ib(type=(float, int))
     start = attr.ib(type=datetime.time)
     end = attr.ib(type=datetime.time)
     weekdays = attr.ib(type=(list, None))
+    constraints = attr.ib(type=list)
 
     @staticmethod
     def _make_weekday_list(literal):
@@ -125,7 +142,8 @@ class Schedule:
             setpoint=sched["setpoint"],
             start=sched["start"],
             end=sched["end"],
-            weekdays=cls._make_weekday_list(sched.get("weekdays"))
+            weekdays=cls._make_weekday_list(sched.get("weekdays")),
+            constraints=BinarySensor.from_config(sched.get("constraints", []))
         ) for sched in dct]
 
 
@@ -162,7 +180,7 @@ class Room:
         else:  # crosses midnight
             return check_time >= begin_time or check_time <= end_time
 
-    def eval_setpoint(self, mode, dt_override=None):
+    def eval_setpoint(self, mode, hass, dt_override=None):
         if mode is Mode.Off:
             return None
         dt = dt_override or datetime.datetime.now()
@@ -172,15 +190,17 @@ class Room:
             raise ValueError("Given mode '{mode}' is not a control mode".format(**locals()))
         for sched in ctrl.schedules:
             start, end = sched.start, sched.end
-            weekdays = sched.weekdays
-            if self._is_time_between(start, end, check_time=dt.time()) and wday in weekdays:
+            check_time = self._is_time_between(start, end, check_time=dt.time())
+            check_weekdays = wday in sched.weekdays
+            check_constraints = all([c.current(hass) for c in sched.constraints])
+            if check_time and check_weekdays and check_constraints:
                 return sched.setpoint
         return ctrl.setpoint  # Default setpoint when no schedule matches
 
     def update_setpoints(self, hass, mode, dt_override=None):
         if mode is Mode.Off:
             return
-        setpoint = self.eval_setpoint(mode, dt_override)
+        setpoint = self.eval_setpoint(mode, hass, dt_override)
         hass.log("Evaluated setpoint for '{self.name}' to '{setpoint}'".format(**locals()))
         for tht in self.thermostats:
             tht.set_setpoint(hass, setpoint)
@@ -228,7 +248,8 @@ class Validator:
             Required("start"): str2time,
             Required("end"): str2time,
             Required("setpoint"): SETPOINT_SCHEMA,
-            Optional("weekdays"): str
+            Optional("weekdays"): str,
+            Optional("constraints"): Or([str], lambda v: [v] if isinstance(v, str) else [])
         }]
     })
 
@@ -268,6 +289,7 @@ class App(hass.Hass):
         dct = Validator.validate_config(self.args)
         self._config = Config.from_dict(dct)
         self.schedules = []
+        self.on_change_handler = []
 
         if self._config.mode_init_options:
             self._set_options()
@@ -302,6 +324,11 @@ class App(hass.Hass):
         self._update_setpoints_for_all_rooms()
         self._make_schedules()
 
+    def _on_constraint_change(self, entity, attribute, old, new, kwargs):
+        self.log("Constraint '{entity}' value change from '{old}' to '{new}'".format(**locals()))
+        room = kwargs.pop("room")
+        room.update_setpoints(hass=self, mode=self._mode)
+
     def _resolve_mode(self, hass_mode):
         mode_label = hass_mode
         if self._config.mode_map:
@@ -316,6 +343,12 @@ class App(hass.Hass):
             self.cancel_timer(handle)
         self.schedules.clear()
 
+        # Remove contraints state change handler
+        self.log("Clearing on_change event handler")
+        for handle in self.on_change_handler:
+            self.cancel_listen_state(handle)
+        self.on_change_handler.clear()
+
         # New schedules
         mode = self._mode
         if mode is Mode.Off:
@@ -327,6 +360,9 @@ class App(hass.Hass):
                 self.schedules.append(self.run_daily(self._on_schedule, start, room=room))
                 self.log("Creating schedule for room '{room.name}' @ {end} @ '{mode}'".format(**locals()))
                 self.schedules.append(self.run_daily(self._on_schedule, end, room=room))
+                for c in sched.constraints:
+                    self.log("Creating constraint on change handler for {c.entity} @ {room.name}".format(**locals()))
+                    self.on_change_handler.append(c.on_change(self, self._on_constraint_change, room))
 
     def _update_setpoints_for_all_rooms(self):
         for room in self._config.rooms:

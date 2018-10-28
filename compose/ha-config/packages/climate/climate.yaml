@@ -49,3 +49,7 @@ climate:
     name: generic
     heater: light.heater
     target_sensor: sensor.cur_temp
+
+input_boolean:
+  run_schedule:
+    name: "Run Schedule"
