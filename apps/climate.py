@@ -8,7 +8,7 @@ import appdaemon.plugins.hass.hassapi as hass
 import utils
 
 
-__VERSION__ = "0.2.0"
+__VERSION__ = "0.2.1"
 MIN_TEMP = 8
 MAX_TEMP = 28
 
