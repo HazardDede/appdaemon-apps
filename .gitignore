@@ -109,6 +109,7 @@ compiled
 # HASS
 .HA_VERSION
 compose/ha-config/*.db
+compose/ha-config/.storage/
 
 # Custom stuff
 run.sh
