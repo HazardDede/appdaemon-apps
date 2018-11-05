@@ -18,6 +18,25 @@ When you finished `Ctrl + C` out of the logs and run:
 docker-compose down
 ```
 
+## Running appdaemon
+
+Just mount your personal `apps.yaml` and inject your home assistant url and api key. It is vital that the auth_provider `legacy_api_password` is activated, cause appdaemon only supports this one. See the `configuration.yaml` of hass inside the `compose` folder.
+
+```bash
+# Build the appdaemon image
+make docker  # OR: make docker-arm for arm-based host systems
+
+docker run --name appdaemon-apps \
+      -e TZ=Europe/Berlin \
+      -e HA_URL=http://hass:8123 \
+      -e HA_KEY=<your_key> \
+      -v /path/to/your/app_yaml/folder:/apps \
+      <docker image name>
+```
+
+If hass itself is running as a container make sure to link it accordingly.
+Hint: Have a look @ the `docker-compose.yaml` for further reference.
+
 ## Apps
 
 ### Climate
