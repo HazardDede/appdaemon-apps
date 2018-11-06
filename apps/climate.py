@@ -1,4 +1,5 @@
 import attr
+import math
 import datetime
 from enum import Enum
 import time
@@ -67,7 +68,6 @@ class InputNumberThermostat(Thermostat):
         curval = hass.get_state(entity=self.name)
         offsetted_sp = setpoint + self.offset
         range_sp = min(max(MIN_TEMP, int(offsetted_sp + 0.5)), MAX_TEMP)  # Min, Max + Rounding
-        import math
         if not math.isclose(float(curval), float(range_sp)):
             hass.log("Calling input_number/set_value for '{self.name}' with setpoint "
                      "'{range_sp}' (offset='{self.offset}')".format(**locals()))
@@ -84,7 +84,6 @@ class ClimateThermostat(Thermostat):
         curval = hass.get_state(entity=self.name, attribute="temperature")
         offsetted_sp = setpoint + self.offset
         range_sp = min(max(MIN_TEMP, int(offsetted_sp + 0.5)), MAX_TEMP)  # Min, Max + Rounding
-        import math
         if not math.isclose(float(curval), float(range_sp)):
             hass.log("Calling climate/set_temperature for '{self.name}' with setpoint "
                      "'{range_sp}' (offset='{self.offset}')".format(**locals()))
@@ -158,17 +157,50 @@ class Control:
 
 
 @attr.s
+class SetpointSensor:
+    name = attr.ib(type=str)
+    attributes = attr.ib(type=dict)
+    last_setpoint = attr.ib(type=float, init=False, default=None)
+
+    @classmethod
+    def from_dict(cls, dct, room_name):
+        # dct is not None
+        name = dct.get("name") or "{room_name}_setpoint".format(**locals())
+        attributes = dct.get("attributes", {})
+        if attributes == {}:
+            attributes["unit_of_measurement"] = "°C"
+        return cls(
+            name="sensor.{name}".format(**locals()),
+            attributes=attributes
+        )
+
+    def publish(self, hass, setpoint):
+        if self.last_setpoint is None or not math.isclose(float(self.last_setpoint), float(setpoint)):
+            uom = self.attributes.get("unit_of_measurement")
+            hass.log("Setting sensor '{self.name}' to targt temperature '{setpoint} {uom}'".format(**locals()))
+            hass.set_state(entity_id=self.name, state=setpoint, attributes=self.attributes)
+            self.last_setpoint = float(setpoint)
+
+
+@attr.s
 class Room:
     name = attr.ib(type=str)
     thermostats = attr.ib(type=list)
     controls = attr.ib(type=dict)
+    setpoint_sensor = attr.ib(type=SetpointSensor)
 
     @classmethod
     def from_dict(cls, dct):
+        def mk_setpoint_sensor(room_name, dct):
+            if "setpoint_sensor" not in dct:
+                return None  # We do not want to use a sensor
+            return SetpointSensor.from_dict(dct["setpoint_sensor"] or {}, room_name)
+
         return [cls(
             name=rname,
             thermostats=Thermostat.from_dict(rdct["thermostats"]),
-            controls={mode: Control.from_dict(rdct[mode.value]) for mode in Mode if mode is not Mode.Off}
+            controls={mode: Control.from_dict(rdct[mode.value]) for mode in Mode if mode is not Mode.Off},
+            setpoint_sensor=mk_setpoint_sensor(rname, rdct)
         ) for rname, rdct in dct.items()]
 
     @staticmethod
@@ -197,11 +229,16 @@ class Room:
                 return sched.setpoint
         return ctrl.setpoint  # Default setpoint when no schedule matches
 
+    def set_setpoint_sensor(self, hass, setpoint):
+        if self.setpoint_sensor:
+            self.setpoint_sensor.publish(hass, setpoint)
+
     def update_setpoints(self, hass, mode, dt_override=None):
         if mode is Mode.Off:
             return
         setpoint = self.eval_setpoint(mode, hass, dt_override)
         hass.log("Evaluated setpoint for '{self.name}' to '{setpoint}'".format(**locals()))
+        self.set_setpoint_sensor(hass, setpoint)
         for tht in self.thermostats:
             tht.set_setpoint(hass, setpoint)
 
@@ -261,6 +298,11 @@ class Validator:
         }
     ))
 
+    ROOM_SETPOINT_SENSOR_SCHEMA = Schema({
+        Optional("name", default=None): Or(None, str),
+        Optional("attributes", default={}): {str: object}
+    })
+
     SCHEMA = Schema({
         Optional("check_interval", default=0): utils.parse_duration_literal,
         Required("mode"): {
@@ -271,6 +313,7 @@ class Validator:
         Required("rooms"): {
             str: {
                 Required("thermostats"): [THERMOSTAT_SCHEMA],
+                Optional("setpoint_sensor"): Or(ROOM_SETPOINT_SENSOR_SCHEMA, None),
                 Required("comfort"): HEATING_SCHEMA,
                 Required("energy"): HEATING_SCHEMA,
                 Required("frost"): HEATING_SCHEMA

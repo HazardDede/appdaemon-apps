@@ -54,6 +54,10 @@ climate:
     init_options: True
   rooms:
     bath_downstairs:
+      # Creates a sensor that tracks the current target temperature configured for this room
+      # Default name is: "<room_name>_setpoint"
+      # Default unit of measurement is: °C
+      setpoint_sensor:  
       thermostats:
         - input_number.bath_heater
       comfort:
@@ -72,6 +76,12 @@ climate:
       frost:
         setpoint: 8
     living:
+      setpoint_sensor:  
+        name: living_setpoint  # Override name
+        attributes:  # Override attributes as you like
+          unit_of_measurement: "Grad"
+          friendly_name: "Target Temp: Living room"
+          icon: mdi:thermostat
       thermostats:
         - input_number.hallway_heater
         - entity: input_number.gallery_heater

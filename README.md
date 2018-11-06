@@ -60,6 +60,10 @@ climate:
     init_options: True  # Set the options of input_select.heating_mode
   rooms:
     bath_downstairs:  # Just a name
+      # Creates a sensor that tracks the current target temperature configured for this room
+      # Default name is: "<room_name>_setpoint"
+      # Default unit of measurement is: °C
+      setpoint_sensor:
       thermostats:
         - input_number.bath_heater  # One or many thermostats (input_number or climate)
       comfort:  # Mode comfort
@@ -78,6 +82,12 @@ climate:
       frost:  # Mode frost
         setpoint: 8
     living:  # Another room
+      setpoint_sensor:  
+        name: living_setpoint  # Override name
+        attributes:  # Override attributes as you like
+          unit_of_measurement: "Grad"
+          friendly_name: "Target Temp: Living room"
+          icon: mdi:thermostat
       thermostats:
         - input_number.hallway_heater
         - entity: input_number.gallery_heater
@@ -147,6 +157,7 @@ paula_state:
 
 ## Changelog
 
+* 0.3.0: Add `setpoint_sensor` to climate app to provide current room setpoint to hass
 * 0.2.1: Adds contraints to climate app schedules
 * 0.2.0: Making linter happy, pass duration in seconds as literals (e.g. 10m, 2d, ...)
 * 0.1.0: First working version

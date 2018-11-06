@@ -9,6 +9,8 @@ climate:
     - light.heater
     - climate.generic
     - input_boolean.run_schedule
+    - sensor.living_setpoint
+    - sensor.bath_downstairs_setpoint
 
 presence:
   name: Presence App

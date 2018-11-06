@@ -24,10 +24,15 @@ EXPOSE 5050
 # Copy appdaemon into image
 RUN mkdir -p /appdaemon
 WORKDIR /appdaemon
-COPY . .
 
-# Install
+# First copy th requirements and re-use any existing docker layer's
+# so far no requirements changed...
+COPY requirements.txt .
+
+# Install deps
 RUN pip3 install -r requirements.txt
+
+COPY . .
 
 # Start script
 RUN chmod +x ./entrypoint.sh
