@@ -25,6 +25,13 @@ EXPOSE 5050
 RUN mkdir -p /appdaemon
 WORKDIR /appdaemon
 
+RUN apt-get update -yy && apt-get install -yy \
+    python3-lxml \
+    libxslt-dev \
+    libxml2-dev \
+    zlib1g-dev
+
+
 # First copy th requirements and re-use any existing docker layer's
 # so far no requirements changed...
 COPY requirements.txt .
