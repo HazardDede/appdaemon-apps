@@ -30,6 +30,11 @@ motion:
     - light.light1
     - light.light2
 
+fritzbox:
+  name: FRITZ!Box Guest Wifi
+  entities:
+    - input_boolean.guest_wifi
+
 default_view:
   view: yes
   icon: mdi:home
@@ -37,3 +42,4 @@ default_view:
     - group.climate
     - group.presence
     - group.motion
+    - group.fritzbox

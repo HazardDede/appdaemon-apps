@@ -155,8 +155,24 @@ paula_state:
     just_left: "Just left"
 ```
 
+### FRITZ!Box Guest Wifi
+
+Based on a on/off switch (like entities from the switch domain or an input_boolean) the app enables / disables the guest wifi on your FRITZ!Box router.
+
+```yaml
+fritzbox:
+  module: fritzboxguestwifi
+  class: App
+  host: 169.254.1.1  # Optional: Only set it, if you have to
+  port: 49000  # Optional: Only set it, if you have to
+  user: admin  # Optional: Only set it, if you have to
+  password: your_fritzbox_pwd  # This one is mandatory
+  entity: input_boolean.guest_wifi  # The entity to listen for state changes
+```
+
 ## Changelog
 
+* 0.4.0: Adds the FRITZ!Box Guest wifi app
 * 0.3.0: Add `setpoint_sensor` to climate app to provide current room setpoint to hass
 * 0.2.1: Adds contraints to climate app schedules
 * 0.2.0: Making linter happy, pass duration in seconds as literals (e.g. 10m, 2d, ...)

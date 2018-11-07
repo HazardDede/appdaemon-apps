@@ -1,3 +1,13 @@
+fritzbox:
+  module: fritzboxguestwifi
+  class: App
+  host: 169.254.1.1
+  port: 49000
+  user: admin
+  password: your_fritzbox_pwd
+  entity: input_boolean.guest_wifi
+  dryrun: True
+
 motion_lights:
   module: motion
   class: App

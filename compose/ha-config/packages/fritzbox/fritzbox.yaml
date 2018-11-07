@@ -1,0 +1,4 @@
+input_boolean:
+  guest_wifi:
+    name: "Guest Wifi"
+    initial: off

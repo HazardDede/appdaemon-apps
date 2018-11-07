@@ -1,104 +1,113 @@
 # This one is just for testing purposes and will be overwritten
 # when starting a docker container and mounting /apps.
 
-motion_lights:
-  module: motion
-  class: App
-  for: 5
-  motion: binary_sensor.motion
-  lights: 
-    - light.light1
-    - light.light2
-  sensor: 
-    - entity: sensor.lux_1
-      op: below
-      value: 10
+# motion_lights:
+#   module: motion
+#   class: App
+#   for: 5
+#   motion: binary_sensor.motion
+#   lights: 
+#     - light.light1
+#     - light.light2
+#   sensor: 
+#     - entity: sensor.lux_1
+#       op: below
+#       value: 10
 
-paula_state:
-  module: presence
-  class: App
-  tracker: input_select.paula
-  state: input_select.paula_state
-  init_options: True
-  just_arrived_delay: 5
-  just_left_delay: 5
-  extended_away_delay: 5
-  map:
-    home: "Home"
-    away: "Away"
-    extended_away: "Extended Away"
-    just_arrived: "Just arrived"
-    just_left: "Just left"
+# paula_state:
+#   module: presence
+#   class: App
+#   tracker: input_select.paula
+#   state: input_select.paula_state
+#   init_options: True
+#   just_arrived_delay: 5
+#   just_left_delay: 5
+#   extended_away_delay: 5
+#   map:
+#     home: "Home"
+#     away: "Away"
+#     extended_away: "Extended Away"
+#     just_arrived: "Just arrived"
+#     just_left: "Just left"
 
-paul_state:
-  module: presence
-  class: App
-  tracker: input_select.paul
-  state: input_select.paul_state
-  init_options: True
-  just_arrived_delay: 5
-  just_left_delay: 5
-  extended_away_delay: 5
+# paul_state:
+#   module: presence
+#   class: App
+#   tracker: input_select.paul
+#   state: input_select.paul_state
+#   init_options: True
+#   just_arrived_delay: 5
+#   just_left_delay: 5
+#   extended_away_delay: 5
 
-climate:
-  module: climate
-  class: Climate
-  check_interval: 10s
-  mode: 
-    entity: input_select.heating_mode
-    map:
-      Comfort: comfort
-      Energy saving: energy
-      Frost protection: frost
-      "Off": "off"
-    init_options: True
-  rooms:
-    bath_downstairs:
-      # Creates a sensor that tracks the current target temperature configured for this room
-      # Default name is: "<room_name>_setpoint"
-      # Default unit of measurement is: °C
-      setpoint_sensor:  
-      thermostats:
-        - input_number.bath_heater
-      comfort:
-        setpoint: 20
-        schedule:
-          - start: "06:30"
-            end: "09:30"
-            weekdays: "2-5"
-            setpoint: 22
-          - start: "08:30"
-            end: "10:00"
-            weekdays: "6,7,1"
-            setpoint: 22
-      energy:
-        setpoint: 17
-      frost:
-        setpoint: 8
-    living:
-      setpoint_sensor:  
-        name: living_setpoint  # Override name
-        attributes:  # Override attributes as you like
-          unit_of_measurement: "Grad"
-          friendly_name: "Target Temp: Living room"
-          icon: mdi:thermostat
-      thermostats:
-        - input_number.hallway_heater
-        - entity: input_number.gallery_heater
-          offset: 1
-        - climate.generic
-      comfort:
-        setpoint: 21
-        schedule:
-          - start: "00:00"
-            end: "06:00"
-            setpoint: 19
-          - start: "06:00"  # Heat up when input_boolean 'run_schedule' evaluates to true ('on')
-            end: "23:59"
-            setpoint: 24
-            constraints:
-              - input_boolean.run_schedule
-      energy:
-        setpoint: 18
-      frost:
-        setpoint: 8
+# climate:
+#   module: climate
+#   class: Climate
+#   check_interval: 10s
+#   mode: 
+#     entity: input_select.heating_mode
+#     map:
+#       Comfort: comfort
+#       Energy saving: energy
+#       Frost protection: frost
+#       "Off": "off"
+#     init_options: True
+#   rooms:
+#     bath_downstairs:
+#       # Creates a sensor that tracks the current target temperature configured for this room
+#       # Default name is: "<room_name>_setpoint"
+#       # Default unit of measurement is: °C
+#       setpoint_sensor:  
+#       thermostats:
+#         - input_number.bath_heater
+#       comfort:
+#         setpoint: 20
+#         schedule:
+#           - start: "06:30"
+#             end: "09:30"
+#             weekdays: "2-5"
+#             setpoint: 22
+#           - start: "08:30"
+#             end: "10:00"
+#             weekdays: "6,7,1"
+#             setpoint: 22
+#       energy:
+#         setpoint: 17
+#       frost:
+#         setpoint: 8
+#     living:
+#       setpoint_sensor:  
+#         name: living_setpoint  # Override name
+#         attributes:  # Override attributes as you like
+#           unit_of_measurement: "Grad"
+#           friendly_name: "Target Temp: Living room"
+#           icon: mdi:thermostat
+#       thermostats:
+#         - input_number.hallway_heater
+#         - entity: input_number.gallery_heater
+#           offset: 1
+#         - climate.generic
+#       comfort:
+#         setpoint: 21
+#         schedule:
+#           - start: "00:00"
+#             end: "06:00"
+#             setpoint: 19
+#           - start: "06:00"  # Heat up when input_boolean 'run_schedule' evaluates to true ('on')
+#             end: "23:59"
+#             setpoint: 24
+#             constraints:
+#               - input_boolean.run_schedule
+#       energy:
+#         setpoint: 18
+#       frost:
+#         setpoint: 8
+fritzbox:
+  module: fritzboxguestwifi
+  class: App
+  host: 169.254.1.1
+  port: 49000
+  user: admin
+  password: your_fritzbox_pwd
+  entity: input_boolean.guest_wifi
+  dryrun: True
