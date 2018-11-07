@@ -13,6 +13,7 @@ class App(hass.Hass):
         self.port = self.args.get('port', fc.FRITZ_TCP_PORT)
         self.user = self.args.get('user', fc.FRITZ_USERNAME)
         self.password = self.args.get('password', None)
+        self.service = self.args.get('service', 'WLANConfiguration:2')
         self.entity = self.args.get('entity', None)
         self.dry_run = self.args.get('dryrun', False)
 
@@ -49,7 +50,7 @@ class App(hass.Hass):
         new_state = '1' if turn_on else '0'
         try:
             if not self.dry_run:
-                self._connection.call_action('WLANConfiguration:3', 'SetEnable', NewEnable=new_state)
+                self._connection.call_action(self.service, 'SetEnable', NewEnable=new_state)
         except ServiceError or ActionError:
             import traceback
             self.log(traceback.format_exception())

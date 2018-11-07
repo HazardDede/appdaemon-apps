@@ -168,6 +168,7 @@ fritzbox:
   user: admin  # Optional: Only set it, if you have to
   password: your_fritzbox_pwd  # This one is mandatory
   entity: input_boolean.guest_wifi  # The entity to listen for state changes
+  service: 'WLANConfiguration:2'  # Optional. The service to call that represents your Guest Wifi. Most probably the default.
 ```
 
 ## Changelog
