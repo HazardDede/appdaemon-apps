@@ -1,4 +1,4 @@
-FROM arm32v7/python:3.6-stretch
+FROM arm32v7/python:3.5-stretch
 
 # Mount extra apps and app.yaml
 # Will be copied to the correct path

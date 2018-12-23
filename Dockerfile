@@ -31,6 +31,9 @@ WORKDIR /appdaemon
 #     libxml2-dev \
 #     zlib1g-dev
 
+# Upgrades pip
+RUN pip3 install pip --upgrade
+
 # First copy th requirements and re-use any existing docker layer's
 # so far no requirements changed...
 COPY requirements.txt .
