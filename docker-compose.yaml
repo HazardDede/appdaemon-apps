@@ -1,7 +1,7 @@
 version: '3'
 services:
   hass:
-    image: homeassistant/home-assistant:0.81.2
+    image: homeassistant/home-assistant:0.84.6
     ports:
       - "8123:8123"
     volumes:
@@ -20,5 +20,5 @@ services:
     environment:
       - TZ=Europe/Berlin
       - HA_URL=http://hass:8123
-      - HA_KEY=welcome
+      - TOKEN=thetokenyoucreated
     container_name: "appdaemon"

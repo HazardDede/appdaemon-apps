@@ -9,6 +9,6 @@ appdaemon:
     HASS:
       type: hass
       ha_url: http://localhost:8123
-      ha_key: welcome
+      token: "thetokenyoucreated"
 hadashboard:
   dash_url: http://localhost:5050
