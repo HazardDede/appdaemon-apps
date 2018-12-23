@@ -30,12 +30,12 @@ class App(hass.Hass):
                 user=self.user,
                 password=self.password
             )
-        
+
         self.listen_state(self._on_state_change, self.entity)
         self.log("Finished setting up FRITZ!Box Guest Wifi app")
         current_state = self.get_state(self.entity)
         self._turn_on_off(current_state == 'on')
-    
+
     def _on_state_change(self, entity, attribute, old, new, kwargs):
         self.log("State change detected @ {entity}: {old} -> {new}".format(**locals()))
         if old == 'off' and new == 'on':
@@ -45,7 +45,7 @@ class App(hass.Hass):
 
     def _turn_on_off(self, turn_on):
         self.log("Turning FRITZ!Box Guest Wifi {}".format('On' if turn_on else 'Off'))
-        
+
         from fritzconnection.fritzconnection import ServiceError, ActionError
         new_state = '1' if turn_on else '0'
         try:
