@@ -1,7 +1,7 @@
 .PHONY: lint next-version accept-version revoke-version
 
 # Setup
-VERSION=0.3.0
+VERSION=0.3.1
 SOURCE_PATH=./apps
 CONTAINER_NAME=appdaemon
 
