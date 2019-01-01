@@ -4,7 +4,9 @@ AppDaemon Apps for home-assistant for my private hosted home assistent instance.
 
 ## Running a demo
 
-Run the following commands (make sure that docker and docker-compose is installed) to startup a home assistent and a appdaemon instance for demo purpose.
+Run the following commands (make sure that docker and docker-compose is installed) to startup a home assistent instance and a appdaemon instance for demo purpose.
+
+There is already a pre-installed user `user` with related password `welcome`. A long lived access token for appdaemon (authentication for appdaemon @ home assistent) has already been created.
 
 ```bash
 docker-compose up -d && docker logs --tail=50 -f appdaemon
@@ -20,7 +22,7 @@ docker-compose down
 
 ## Running appdaemon
 
-Just mount your personal `apps.yaml` and inject your home assistant url and api key. It is vital that the auth_provider `legacy_api_password` is activated, cause appdaemon only supports this one. See the `configuration.yaml` of hass inside the `compose` folder.
+Just mount your personal `apps.yaml` and inject your home assistant url and previously generated long lived access token. It is vital that a long lived access token for appdaemon has been created and supplied via environment variables. See [https://appdaemon.readthedocs.io/en/latest/CONFIGURE.html#hass-authentication](https://appdaemon.readthedocs.io/en/latest/CONFIGURE.html#hass-authentication) for reference on creating long lived access tokens.
 
 ```bash
 # Build the appdaemon image
@@ -29,7 +31,7 @@ make docker  # OR: make docker-arm for arm-based host systems
 docker run --name appdaemon-apps \
       -e TZ=Europe/Berlin \
       -e HA_URL=http://hass:8123 \
-      -e HA_KEY=<your_key> \
+      -e HA_TOKEN=<your_token> \
       -v /path/to/your/app_yaml/folder:/apps \
       <docker image name>
 ```
@@ -50,6 +52,7 @@ climate:
   module: climate
   class: App
   check_interval: 5m  # Checks the setpoints every interval. Adjust setpoints if necessary
+  force_set_on_interval: False  # If True will force a setpoint set for the thermostats on the check interval.
   mode: 
     entity: input_select.heating_mode  # The mode selector in hass
     map:  # Map the internal modes to human readable ones
@@ -92,6 +95,7 @@ climate:
         - input_number.hallway_heater
         - entity: input_number.gallery_heater
           offset: 1  # Offset will effectively increase/decrease temperature (if target is 21 this will be set to 22)
+          force: True  # Will force to set the thermostat even when it seems it's state has not changed
       comfort:
         setpoint: 21
         schedule:  # Some energy savings in the nighttime
@@ -173,7 +177,8 @@ fritzbox:
 
 ## Changelog
 
-* 0.4.0: Adds the FRITZ!Box Guest wifi app
+* 0.4.0: Updates appdaemon requirement to 3.0.2. Uses long lived access tokens. Introduces force setpoint set to climate app
+* 0.3.1: Adds the FRITZ!Box Guest wifi app
 * 0.3.0: Add `setpoint_sensor` to climate app to provide current room setpoint to hass
 * 0.2.1: Adds contraints to climate app schedules
 * 0.2.0: Making linter happy, pass duration in seconds as literals (e.g. 10m, 2d, ...)

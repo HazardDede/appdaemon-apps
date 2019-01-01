@@ -12,6 +12,7 @@ tests
 venv
 
 compiled
+compose
 
 .coverage
 .gitignore
@@ -24,3 +25,6 @@ compiled
 **/__pycache__
 
 Dockerfile
+Dockerfile.armhf
+
+Makefile

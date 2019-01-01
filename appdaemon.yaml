@@ -9,6 +9,6 @@ appdaemon:
     HASS:
       type: hass
       ha_url: http://localhost:8123
-      token: "thetokenyoucreated"
+      token: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiI1ZjEzZTZkNDMwNmE0ZmUwODJmOTI4OTRmMzc5YTI2ZiIsImlhdCI6MTU0NTg5NTAwOCwiZXhwIjoxODYxMjU1MDA4fQ.RdSg11mDT1PNIlA72K-01DKPRCCFnuroj-C2AwehI4E"
 hadashboard:
   dash_url: http://localhost:5050

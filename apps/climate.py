@@ -40,21 +40,24 @@ class Mode (Enum):
 class Thermostat:
     name = attr.ib(type=str)
     offset = attr.ib(type=(int, float), default=0)
+    force = attr.ib(type=(None, bool), default=None)
 
-    def set_setpoint(self, hass, setpoint):
+    def set_setpoint(self, hass, setpoint, force=False):
         raise NotImplementedError()
 
     @classmethod
     def _factory(cls, tht):
         entity = tht
         offset = 0
+        force = None
         if isinstance(tht, dict):  # Complex with offset
             entity = tht['entity']
             offset = tht['offset']
+            force = tht['force']
         if entity.startswith("input_number"):
-            return InputNumberThermostat(name=entity, offset=offset)
+            return InputNumberThermostat(name=entity, offset=offset, force=force)
         if entity.startswith("climate"):
-            return ClimateThermostat(name=entity, offset=offset)
+            return ClimateThermostat(name=entity, offset=offset, force=force)
         raise NotImplementedError("Sorry but the thermostat '{}' you provided is not supported".format(**locals()))
 
     @classmethod
@@ -64,11 +67,13 @@ class Thermostat:
 
 @attr.s
 class InputNumberThermostat(Thermostat):
-    def set_setpoint(self, hass, setpoint):
+    def set_setpoint(self, hass, setpoint, force=False):
+        # Thermostat force overrides global force (if any)
+        _force = self.force if self.force is not None else force
         curval = hass.get_state(entity=self.name)
         offsetted_sp = setpoint + self.offset
         range_sp = min(max(MIN_TEMP, int(offsetted_sp + 0.5)), MAX_TEMP)  # Min, Max + Rounding
-        if not math.isclose(float(curval), float(range_sp)):
+        if _force or not math.isclose(float(curval), float(range_sp)):
             hass.log("Calling input_number/set_value for '{self.name}' with setpoint "
                      "'{range_sp}' (offset='{self.offset}')".format(**locals()))
             hass.call_service(
@@ -80,11 +85,13 @@ class InputNumberThermostat(Thermostat):
 
 @attr.s
 class ClimateThermostat(Thermostat):
-    def set_setpoint(self, hass, setpoint):
+    def set_setpoint(self, hass, setpoint, force=False):
+        # Thermostat force overrides global force (if any)
+        _force = self.force if self.force is not None else force
         curval = hass.get_state(entity=self.name, attribute="temperature")
         offsetted_sp = setpoint + self.offset
         range_sp = min(max(MIN_TEMP, int(offsetted_sp + 0.5)), MAX_TEMP)  # Min, Max + Rounding
-        if not math.isclose(float(curval), float(range_sp)):
+        if _force or not math.isclose(float(curval), float(range_sp)):
             hass.log("Calling climate/set_temperature for '{self.name}' with setpoint "
                      "'{range_sp}' (offset='{self.offset}')".format(**locals()))
             hass.call_service(
@@ -233,14 +240,14 @@ class Room:
         if self.setpoint_sensor:
             self.setpoint_sensor.publish(hass, setpoint)
 
-    def update_setpoints(self, hass, mode, dt_override=None):
+    def update_setpoints(self, hass, mode, dt_override=None, force=False):
         if mode is Mode.Off:
             return
         setpoint = self.eval_setpoint(mode, hass, dt_override)
         hass.log("Evaluated setpoint for '{self.name}' to '{setpoint}'".format(**locals()))
         self.set_setpoint_sensor(hass, setpoint)
         for tht in self.thermostats:
-            tht.set_setpoint(hass, setpoint)
+            tht.set_setpoint(hass, setpoint, force=force)
 
 
 @attr.s
@@ -249,6 +256,7 @@ class Config:
     mode_map = attr.ib(type=dict)
     mode_init_options = attr.ib(type=bool)
     check_interval = attr.ib(type=int)
+    force_set_on_interval = attr.ib(type=bool)
     rooms = attr.ib(type=list)
 
     @classmethod
@@ -260,6 +268,7 @@ class Config:
             mode_map=mode_node.get("map"),
             mode_init_options=mode_node.get("init_options", False),
             check_interval=dct["check_interval"],
+            force_set_on_interval=dct["force_set_on_interval"],
             rooms=Room.from_dict(rooms_node)
         )
 
@@ -294,7 +303,8 @@ class Validator:
         str,
         {
             Required("entity"): str,
-            Optional("offset", default=0): int
+            Optional("offset", default=0): int,
+            Optional("force", default=None): Or(None, bool)
         }
     ))
 
@@ -357,7 +367,7 @@ class App(hass.Hass):
         kwargs['room'].update_setpoints(hass=self, mode=self._mode)
 
     def _on_interval(self, kwargs):
-        self.log("On interval")
+        self.log("On interval thermostat check")
         self._update_setpoints_for_all_rooms()
 
     def _on_mode_change(self, entity, attribute, old, new, kwargs):
@@ -409,7 +419,7 @@ class App(hass.Hass):
 
     def _update_setpoints_for_all_rooms(self):
         for room in self._config.rooms:
-            room.update_setpoints(hass=self, mode=self._mode)
+            room.update_setpoints(hass=self, mode=self._mode, force=self._config.force_set_on_interval)
 
     def _set_options(self):
         # Memorize current state. set_options will revert the selection

@@ -109,7 +109,7 @@ compiled
 # HASS
 .HA_VERSION
 compose/ha-config/*.db
-compose/ha-config/.storage/
+compose/ha-config/.storage/core.restore_state
 
 # Custom stuff
 run.sh

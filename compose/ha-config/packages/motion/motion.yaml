@@ -45,18 +45,22 @@ light:
         turn_on:
           service: logbook.log
           data:
+            name: "Light 1"
             message: "Light 1 on"
         turn_off:
           service: logbook.log
           data:
+            name: "Light 1"
             message: "Light 1 off"
       light2:
         friendly_name: "Light 2"
         turn_on:
           service: logbook.log
           data:
+            name: "Light 2"
             message: "Light 2 on"
         turn_off:
           service: logbook.log
           data:
+            name: "Light 2"
             message: "Light 2 off"

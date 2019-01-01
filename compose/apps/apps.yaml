@@ -51,6 +51,7 @@ climate:
   module: climate
   class: Climate
   check_interval: 10s
+  force_set_on_interval: False
   mode: 
     entity: input_select.heating_mode
     map:
@@ -93,7 +94,9 @@ climate:
         - input_number.hallway_heater
         - entity: input_number.gallery_heater
           offset: 1
-        - climate.generic
+          force: True
+        - entity: climate.generic
+          force: True
       comfort:
         setpoint: 21
         schedule:

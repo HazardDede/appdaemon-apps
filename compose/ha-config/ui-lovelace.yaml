@@ -1,0 +1,43 @@
+title: AppDaemon Demo
+views:
+    # View tab title.
+  - title: Demo
+    id: demo
+    cards:
+      - type: entities
+        id: climate
+        title: Climate
+        entities: 
+          - input_select.heating_mode
+          - input_number.bath_heater
+          - input_number.hallway_heater
+          - input_number.gallery_heater
+          - input_number.cur_temp
+          - light.heater
+          - climate.generic
+          - input_boolean.run_schedule
+          - sensor.living_setpoint
+          - sensor.bath_downstairs_setpoint
+      - type: entities
+        id: presence
+        title: Presence
+        entities: 
+          - input_select.paula
+          - input_select.paula_state
+          - input_select.paul
+          - input_select.paul_state
+      - type: entities
+        id: motion
+        title: Motion
+        entities: 
+          - input_boolean.motion
+          - binary_sensor.motion
+          - input_number.lux_1
+          - sensor.lux_1
+          - light.light1
+          - light.light2
+      - type: entities
+        id: fritzbox_guestwifi
+        title: FRITZ!Box Guest Wifi
+        entities: 
+          - input_boolean.guest_wifi

@@ -38,10 +38,12 @@ light:
         turn_on:
           service: logbook.log
           data:
+            name: Heater
             message: "Heater on"
         turn_off:
           service: logbook.log
           data:
+            name: Heater
             message: "Heater off"
 
 climate:

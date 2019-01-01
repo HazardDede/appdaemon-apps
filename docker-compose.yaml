@@ -20,5 +20,5 @@ services:
     environment:
       - TZ=Europe/Berlin
       - HA_URL=http://hass:8123
-      - TOKEN=thetokenyoucreated
+      - HA_TOKEN=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiI1ZjEzZTZkNDMwNmE0ZmUwODJmOTI4OTRmMzc5YTI2ZiIsImlhdCI6MTU0NTg5NTAwOCwiZXhwIjoxODYxMjU1MDA4fQ.RdSg11mDT1PNIlA72K-01DKPRCCFnuroj-C2AwehI4E
     container_name: "appdaemon"

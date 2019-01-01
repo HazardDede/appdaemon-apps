@@ -1,4 +1,4 @@
-FROM arm32v7/python:3.5-stretch
+FROM arm32v7/python:3.5-slim-stretch
 
 # Mount extra apps and app.yaml
 # Will be copied to the correct path
@@ -17,7 +17,7 @@ EXPOSE 5050
 # But these are optional, so we won't define them now
 #ENV API_KEY secret_key
 #ENV HA_URL http://hass:8123
-#ENV HA_KEY secret_key
+#ENV HA_TOKEN your_long_lived_access_token_from_hass
 #ENV DASH_URL http://hass:5050
 #ENV EXTRA_CMD -D DEBUG
 
