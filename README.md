@@ -1,6 +1,8 @@
 # appdaemon-apps
 
-AppDaemon Apps for home-assistant for my private hosted home assistent instance. Feel free to use the apps.
+> AppDaemon Apps for home-assistant for my private hosted home assistant instance. Feel free to use the apps.
+
+Docker Hub: [https://cloud.docker.com/repository/docker/hazard/appdaemon-apps/](https://cloud.docker.com/repository/docker/hazard/appdaemon-apps/)
 
 ## Running a demo
 
@@ -25,15 +27,14 @@ docker-compose down
 Just mount your personal `apps.yaml` and inject your home assistant url and previously generated long lived access token. It is vital that a long lived access token for appdaemon has been created and supplied via environment variables. See [https://appdaemon.readthedocs.io/en/latest/CONFIGURE.html#hass-authentication](https://appdaemon.readthedocs.io/en/latest/CONFIGURE.html#hass-authentication) for reference on creating long lived access tokens.
 
 ```bash
-# Build the appdaemon image
-make docker  # OR: make docker-arm for arm-based host systems
-
+# Adjust to your version (see https://cloud.docker.com/repository/docker/hazard/appdaemon-apps/)
+VERSION=0.3.2
 docker run --name appdaemon-apps \
       -e TZ=Europe/Berlin \
       -e HA_URL=http://hass:8123 \
       -e HA_TOKEN=<your_token> \
       -v /path/to/your/app_yaml/folder:/apps \
-      <docker image name>
+      hazard/appdaemon-apps:${VERSION}
 ```
 
 If hass itself is running as a container make sure to link it accordingly.

@@ -3,7 +3,10 @@
 # Setup
 VERSION=0.3.2
 SOURCE_PATH=./apps
-CONTAINER_NAME=appdaemon
+DOCKER_REPO=hazard
+IMAGE_NAME=$(DOCKER_REPO)/appdaemon-apps
+FULL_IMAGE_NAME=$(IMAGE_NAME):$(VERSION)
+FULL_IMAGE_NAME_ARM=$(IMAGE_NAME):$(VERSION)-arm
 
 # Environment overrides
 VERSION_PART?=patch
@@ -16,10 +19,16 @@ lint:
 	flake8 --exclude=.tox --max-line-length 120 --ignore=E722 $(SOURCE_PATH)
 
 docker:
-	docker build -t $(CONTAINER_NAME):$(VERSION) -f Dockerfile .
+	docker build -t $(FULL_IMAGE_NAME) -f Dockerfile .
 
 docker-arm:
-	docker build -t $(CONTAINER_NAME):$(VERSION)-arm -f Dockerfile.armhf .
+	docker build -t $(FULL_IMAGE_NAME_ARM) -f Dockerfile.armhf .
+
+docker-push: docker
+	docker push $(FULL_IMAGE_NAME)
+
+docker-push-arm: docker-arm
+	docker push $(FULL_IMAGE_NAME_ARM)
 
 version:
 	@echo $(VERSION)
