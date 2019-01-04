@@ -26,9 +26,13 @@ docker-arm:
 
 docker-push: docker
 	docker push $(FULL_IMAGE_NAME)
+	docker tag $(FULL_IMAGE_NAME) $(IMAGE_NAME):latest
+	docker push $(IMAGE_NAME):latest
 
 docker-push-arm: docker-arm
 	docker push $(FULL_IMAGE_NAME_ARM)
+	docker tag $(FULL_IMAGE_NAME_ARM) $(IMAGE_NAME):latest-arm
+	docker push $(IMAGE_NAME):latest-arm
 
 version:
 	@echo $(VERSION)

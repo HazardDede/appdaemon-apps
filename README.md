@@ -28,13 +28,12 @@ Just mount your personal `apps.yaml` and inject your home assistant url and prev
 
 ```bash
 # Adjust to your version (see https://cloud.docker.com/repository/docker/hazard/appdaemon-apps/)
-VERSION=0.3.2
 docker run --name appdaemon-apps \
       -e TZ=Europe/Berlin \
       -e HA_URL=http://hass:8123 \
       -e HA_TOKEN=<your_token> \
       -v /path/to/your/app_yaml/folder:/apps \
-      hazard/appdaemon-apps:${VERSION}
+      hazard/appdaemon-apps:latest
 ```
 
 If hass itself is running as a container make sure to link it accordingly.
@@ -178,7 +177,7 @@ fritzbox:
 
 ## Changelog
 
-* 0.4.0: Updates appdaemon requirement to 3.0.2. Uses long lived access tokens. Introduces force setpoint set to climate app
+* 0.3.2: Updates appdaemon requirement to 3.0.2. Uses long lived access tokens. Introduces force setpoint set to climate app
 * 0.3.1: Adds the FRITZ!Box Guest wifi app
 * 0.3.0: Add `setpoint_sensor` to climate app to provide current room setpoint to hass
 * 0.2.1: Adds contraints to climate app schedules
