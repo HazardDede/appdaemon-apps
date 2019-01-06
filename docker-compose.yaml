@@ -11,8 +11,7 @@ services:
     container_name: "hass"
 
   appdaemon:
-    build:
-      context: "."
+    image: hazard/appdaemon-apps:latest
     links:
       - hass
     volumes:
