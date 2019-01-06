@@ -25,6 +25,10 @@ EXPOSE 5050
 RUN mkdir -p /appdaemon
 WORKDIR /appdaemon
 
+RUN apt-get update -yy && apt-get install -yy \
+    libffi6 \
+    libffi-dev
+
 # RUN apt-get update -yy && apt-get install -yy \
 #     python3-lxml \
 #     libxslt-dev \
