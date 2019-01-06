@@ -1,7 +1,7 @@
 version: '3'
 services:
   hass:
-    image: homeassistant/raspberrypi3-homeassistantt:0.84.6
+    image: homeassistant/raspberrypi3-homeassistant:0.84.6
 
   appdaemon:
     image: hazard/appdaemon-apps:latest-arm
