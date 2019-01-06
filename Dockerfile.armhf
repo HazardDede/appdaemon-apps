@@ -26,16 +26,14 @@ RUN mkdir -p /appdaemon
 WORKDIR /appdaemon
 
 RUN apt-get update -yy && apt-get install -yy \
-    cython \
     libffi6 \
-    libffi-dev \
-    python3-lxml \
-    libxslt-dev \
-    libxml2-dev \
-    zlib1g-dev
+    libffi-dev
 
 # RUN apt-get update -yy && apt-get install -yy \
+#     cython \
 #     python3-lxml \
+#     libffi6 \
+#     libffi-dev \
 #     libxslt-dev \
 #     libxml2-dev \
 #     zlib1g-dev
