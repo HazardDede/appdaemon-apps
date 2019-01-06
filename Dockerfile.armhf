@@ -26,6 +26,7 @@ RUN mkdir -p /appdaemon
 WORKDIR /appdaemon
 
 RUN apt-get update -yy && apt-get install -yy \
+    cython \
     libffi6 \
     libffi-dev \
     python3-lxml \
