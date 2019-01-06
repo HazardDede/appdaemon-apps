@@ -27,7 +27,11 @@ WORKDIR /appdaemon
 
 RUN apt-get update -yy && apt-get install -yy \
     libffi6 \
-    libffi-dev
+    libffi-dev \
+    python3-lxml \
+    libxslt-dev \
+    libxml2-dev \
+    zlib1g-dev
 
 # RUN apt-get update -yy && apt-get install -yy \
 #     python3-lxml \
