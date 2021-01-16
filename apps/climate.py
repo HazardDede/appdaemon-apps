@@ -111,7 +111,7 @@ class BinarySensor:
 
     def current(self, hass):
         val = hass.get_state(entity=self.entity)
-        return str(val.lower()) in ['on', 'true', 'home']
+        return str(val).lower() in ['on', 'true', 'home']
 
     def on_change(self, hass, callback, room):
         return hass.listen_state(callback, self.entity, room=room)
