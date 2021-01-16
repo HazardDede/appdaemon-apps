@@ -1,7 +1,7 @@
 .PHONY: lint next-version accept-version revoke-version
 
 # Setup
-VERSION=0.3.2
+VERSION=0.3.3
 SOURCE_PATH=./apps
 DOCKER_REPO=hazard
 IMAGE_NAME=$(DOCKER_REPO)/appdaemon-apps
